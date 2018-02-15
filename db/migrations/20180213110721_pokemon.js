@@ -5,7 +5,8 @@ exports.up = function(knex, Promise) {
     table.string('name').notNullable()
     table.integer('dex_id').notNullable()
     table.string('img').notNullable()
-    //.unique() for ^^^^^
+    table.integer('squad_id')
+    table.foreign('squad_id').references('squads.id')
   })
 };
 
