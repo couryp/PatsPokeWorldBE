@@ -19,21 +19,35 @@ app.get('/pokemon', (req ,res, next) => {
     })
 })
 
-// app.get('/getsquads/:name', (req, res, next) => {
-//   console.log(req.params)
-//   redSonic.getSquads(req.params)
-// })
+app.get('/users/:id/squads', (req, res, next) => {
+  console.log(req.params.id)
+  usermodel.getUserSquads(req.params.id)
+    .then((data) => {
+      console.log(data)
+      res.send(data)
+    })
+    .catch(error => next(error))
+})
 
 app.post('/users', (req, res, next) => {
   usermodel.createUser(req.body.name)
     .then((user) => {
-      res.json({user, valid: true})
+      debugger
+      res.json({userId: user[0], valid: true})
+    })
+    .catch(error => next(error))
+})
+
+app.get('/squads', (req, res, next) => {
+  usermodel.getAllSquads()
+    .then((squad) => {
+      res.json({squad})
     })
     .catch(error => next(error))
 })
 
 app.post('/squads', (req, res, next) => {
-  usermodel.createSquad(req.body.name)
+  usermodel.createSquad(req.body)
     .then((squad) => {
       res.json({squad, valid: true})
     })
@@ -44,6 +58,14 @@ app.post('/pokemon', (req, res, next) => {
   usermodel.createPokemon(req.body.masterArray)
     .then((pokemon) => {
       res.json({pokemon})
+    })
+    .catch(error => next(error))
+})
+
+app.delete('/squads/:id', (req, res, next) => {
+  usermodel.deleteSquad(req.params.id)
+    .then((deleted) => {
+      res.json({deleted})
     })
     .catch(error => next(error))
 })
@@ -63,42 +85,41 @@ app.listen(PORT2, () => {
   console.log(`Listening on PORT:${PORT2}`)
 })
 
-server.listen(PORT, function(){ //8081
-  console.log('Listening on '+server.address().port);
-});
-
 server.lastPlayderID = 0; // Keep track of the last id assigned to a new player
 
+server.listen(PORT, function(){ //8081
+  console.log('wild pokemon on '+server.address().port);
+});
 
 
 io.on('connection',function(socket){
-  console.log('hi')
+
     socket.on('newplayer',function(){
         socket.player = {
             id: server.lastPlayderID++,
             x: randomInt(100,400),
             y: randomInt(100,400)
         };
-        socket.emit('allplayers', getAllPlayers());
+        socket.emit('allplayers',getAllPlayers());
         socket.broadcast.emit('newplayer',socket.player);
-        // socket.on('cursor',function(data){
-        //     socket.player.frame = data.frame
-        //     socket.player.x = data.x
-        //     socket.player.y = data.y
-        //     socket.player.direction = data.direction
-        //     io.emit('move', getAllPlayers())
-        // })
-        // socket.on('click',function(data){
-        //     console.log('click to '+data.x+', '+data.y);
-        //     socket.player.x = data.x;
-        //     socket.player.y = data.y;
-        //     io.emit('move',socket.player);
-        // });
+
+        socket.on('click',function(data){
+            console.log('click to '+data.x+', '+data.y);
+            socket.player.x = data.x;
+            socket.player.y = data.y;
+            io.emit('move',socket.player);
+        });
+
         socket.on('disconnect',function(){
-                io.emit('remove',socket.player.id)
-        })
+            io.emit('remove',socket.player.id);
+        });
+    });
+
+    socket.on('test',function(){
+        console.log('test received');
     });
 });
+
 
 function getAllPlayers(){
     var players = [];
@@ -112,3 +133,11 @@ function getAllPlayers(){
 function randomInt (low, high) {
     return Math.floor(Math.random() * (high - low) + low);
 }
+
+// socket.on('cursor',function(data){
+//     socket.player.frame = data.frame
+//     socket.player.x = data.x
+//     socket.player.y = data.y
+//     socket.player.direction = data.direction
+//     io.emit('move', getAllPlayers())
+// })

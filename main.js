@@ -16,7 +16,6 @@ function getPokemonByID (id) {
       .then(function(response) {
         console.log('inside main.js poke func')
         return new Pokemon(response);
-        console.log(response.name, response.id, response.sprites.front_default, 'derp')
       })
       .catch(function(error) {
         console.log('There was an ERROR: ', error);
